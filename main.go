@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -25,10 +24,18 @@ func compareHashAndPassword(password, hash string) bool {
 	return err == nil
 }
 
+type movieData struct {
+	Name   string
+	Rating float32
+	Voter  int
+}
+
+func unknownRoute(c *fiber.Ctx) error {
+	return c.Redirect("/")
+}
 func homePage(c *fiber.Ctx) error {
 	store := sessions.Get(c)
 	username := store.Get("username")
-	fmt.Println(username)
 	if username == nil {
 		return c.Redirect("/auth")
 	}
@@ -37,13 +44,29 @@ func homePage(c *fiber.Ctx) error {
 			return c.Redirect("/auth")
 		}
 	}
-	return c.Render("index", fiber.Map{}, "layout/main")
+	var data []movieData
+	queryResult, err := db.Query("SELECT name,rating,voter FROM movie")
+	if err != nil {
+		log.Panicln(err.Error())
+	}
+	for queryResult.Next() {
+		var temp movieData
+		err = queryResult.Scan(&temp.Name, &temp.Rating, &temp.Voter)
+		if err != nil {
+			log.Println(err.Error())
+		}
+		data = append(data, temp)
+	}
+	return c.Render("index", fiber.Map{
+		"username":  username,
+		"film":      data,
+		"totalFilm": len(data),
+	}, "layout/main")
 }
 
 func authPage(c *fiber.Ctx) error {
 	store := sessions.Get(c)
 	username := store.Get("username")
-	fmt.Println(username)
 	if username != nil {
 		if user := username.(string); user != "" {
 			return c.Redirect("/")
@@ -65,7 +88,6 @@ func authPage(c *fiber.Ctx) error {
 }
 
 func processAuth(c *fiber.Ctx) error {
-	fmt.Println(c.FormValue("authAction"))
 	store := sessions.Get(c)
 	defer store.Save()
 	email := c.FormValue("email")
@@ -172,5 +194,6 @@ func main() {
 	app.Get("/auth", authPage)
 	app.Get("/logout", logout)
 	app.Post("/auth", processAuth)
+	app.Get("*", unknownRoute)
 	log.Fatalln(app.Listen(":8080"))
 }

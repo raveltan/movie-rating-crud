@@ -1,5 +1,47 @@
-{{> 'partials/header' }}
+{{> 'partials/navbar' }}
 
-<h1>{{Title}}</h1>
-
-{{> 'partials/footer' }}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Movie List</h1>
+        <nav class="level">
+            <div class="level-left">
+                <div class="level-item">
+                    <p class="subtitle is-5"><Strong>{{totalFilm}}</Strong> Movie(s)</p>
+                </div>
+            </div>
+            <div class="level-right">
+                <div class="level-item">
+                    <a href="/add-movie" class="button is-success">Add Movie</a>
+                </div>
+            </div>
+        </nav>
+        <table class="table is-hoverable is-fullwidth">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th class="is-narrow">Rating</th>
+                    <th class="is-narrow">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each film}}
+                <tr>
+                    <td>
+                        {{name}}
+                    </td>
+                    <td>
+                        {{rating}}
+                    </td>
+                    <td>
+                        <div class="buttons">
+                            <a href="add-review/xvc" class="button is-small is-success">
+                                Add Review
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</section>
