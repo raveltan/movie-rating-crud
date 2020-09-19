@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -13,19 +14,44 @@ import (
 var db *sql.DB
 var sessions *session.Session
 
+type authError struct {
+	emailError    bool
+	passwordError bool
+	loginFailed   bool
+}
+
 func homePage(c *fiber.Ctx) error {
 	store := sessions.Get(c)
 	if username := store.Get("username"); username == nil {
-		return c.Redirect("/login")
+		return c.Redirect("/auth")
 	}
-	return c.SendString("hello")
+	return c.Render("index", fiber.Map{}, "layout/main")
 }
 
-func loginPage(c *fiber.Ctx) error {
+func authPage(c *fiber.Ctx) error {
+	store := sessions.Get(c)
+	if username := store.Get("username"); username != nil {
+		return c.Redirect("/")
+	}
+	defer store.Save()
+	errorStatus := store.Get("authError")
+	r, ok := errorStatus.(bool)
+	if !ok {
+		r = false
+	}
+	store.Destroy()
+	fmt.Println(r)
+	return c.Render("auth", fiber.Map{
+		"loginFailed": r,
+	}, "layout/main")
+}
+
+func processAuth(c *fiber.Ctx) error {
 	store := sessions.Get(c)
 	defer store.Save()
-	store.Set("username", "ravel")
-	return c.Render("index", fiber.Map{}, "layout/main")
+	store.Set("authError", true)
+	fmt.Println(c.Body())
+	return c.Redirect("/auth")
 }
 
 func logout(c *fiber.Ctx) error {
@@ -55,7 +81,8 @@ func main() {
 	})
 
 	app.Get("/", homePage)
-	app.Get("/login", loginPage)
+	app.Get("/auth", authPage)
 	app.Get("/logout", logout)
+	app.Post("/auth", processAuth)
 	log.Fatalln(app.Listen(":8080"))
 }
