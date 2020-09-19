@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -12,6 +11,29 @@ import (
 )
 
 var db *sql.DB
+var sessions *session.Session
+
+func homePage(c *fiber.Ctx) error {
+	store := sessions.Get(c)
+	if username := store.Get("username"); username == nil {
+		return c.Redirect("/login")
+	}
+	return c.SendString("hello")
+}
+
+func loginPage(c *fiber.Ctx) error {
+	store := sessions.Get(c)
+	defer store.Save()
+	store.Set("username", "ravel")
+	return c.Render("index", fiber.Map{}, "layout/main")
+}
+
+func logout(c *fiber.Ctx) error {
+	store := sessions.Get(c)
+	defer store.Save()
+	store.Destroy()
+	return c.Redirect("/")
+}
 
 func main() {
 	// Initialize database
@@ -26,17 +48,14 @@ func main() {
 		panic(err.Error())
 	}
 	// Start fiber web server
-	sessions := session.New()
+	sessions = session.New()
 	engine := handlebars.New("./views", ".hbs")
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
 
-	fmt.Println(sessions)
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Render("index", fiber.Map{
-			"Title": "Hello world",
-		}, "layout/main")
-	})
+	app.Get("/", homePage)
+	app.Get("/login", loginPage)
+	app.Get("/logout", logout)
 	log.Fatalln(app.Listen(":8080"))
 }
