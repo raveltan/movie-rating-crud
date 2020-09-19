@@ -10,7 +10,7 @@
                         {{#if loginFailed}}
                         <div class="field">
                             <div class="notification is-danger">
-                                Unable to Login, please check your credentials
+                                {{loginFailed}}
                             </div>
                         </div>
                         {{/if}}
@@ -33,7 +33,7 @@
                             <label for="password" class="label">Password</label>
                             <div class="control has-icons-left">
                                 <input type="password" {{#if loginFailed}}class="input is-danger" {{else}} class="input"
-                                    {{/if}} placeholder="*********" required name="password">
+                                    {{/if}} placeholder="*********" required minlength="8" name="password">
                                 <span class="icon is-small is-left">
                                     <i class="fa fa-lock"></i>
                                 </span>
@@ -46,12 +46,12 @@
                         </div>
                         <div class="field is-grouped is-grouped-centered">
                             <p class="control">
-                                <button type="submit" class="button is-primary">
+                                <button type="submit" class="button is-primary" name="authAction" value="login">
                                     Login
                                 </button>
                             </p>
                             <p class="control">
-                                <button type="submit" class="button is-light">
+                                <button type="submit" class="button is-light" name="authAction" value="register">
                                     Register
                                 </button>
                             </p>

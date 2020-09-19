@@ -9,61 +9,149 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/session/v2"
 	"github.com/gofiber/template/handlebars"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var db *sql.DB
 var sessions *session.Session
 
-type authError struct {
-	emailError    bool
-	passwordError bool
-	loginFailed   bool
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func compareHashAndPassword(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func homePage(c *fiber.Ctx) error {
 	store := sessions.Get(c)
-	if username := store.Get("username"); username == nil {
+	username := store.Get("username")
+	fmt.Println(username)
+	if username == nil {
 		return c.Redirect("/auth")
+	}
+	if user, err := username.(string); !err {
+		if user == "" {
+			return c.Redirect("/auth")
+		}
 	}
 	return c.Render("index", fiber.Map{}, "layout/main")
 }
 
 func authPage(c *fiber.Ctx) error {
 	store := sessions.Get(c)
-	if username := store.Get("username"); username != nil {
-		return c.Redirect("/")
+	username := store.Get("username")
+	fmt.Println(username)
+	if username != nil {
+		if user := username.(string); user != "" {
+			return c.Redirect("/")
+		}
 	}
 	defer store.Save()
 	errorStatus := store.Get("authError")
-	r, ok := errorStatus.(bool)
-	if !ok {
-		r = false
+	var authError string
+	if errorStatus != nil {
+		r, ok := errorStatus.(string)
+		if ok {
+			authError = r
+		}
 	}
-	store.Destroy()
-	fmt.Println(r)
+	store.Delete("authError")
 	return c.Render("auth", fiber.Map{
-		"loginFailed": r,
+		"loginFailed": authError,
 	}, "layout/main")
 }
 
 func processAuth(c *fiber.Ctx) error {
+	fmt.Println(c.FormValue("authAction"))
 	store := sessions.Get(c)
 	defer store.Save()
-	store.Set("authError", true)
-	fmt.Println(c.Body())
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+	if c.FormValue("authAction") == "register" {
+		rows, err := db.Query("SELECT email from users where email = ?", email)
+		if err != nil {
+			log.Println(err.Error())
+			store.Set("authError", "Unknown server error!")
+			return c.Redirect("/auth")
+		}
+		found := false
+		for rows.Next() {
+			var emailStored string
+			var err = rows.Scan(&emailStored)
+			if err != nil {
+				log.Println(err.Error())
+			}
+			if emailStored == email {
+				found = true
+			}
+		}
+		if err = rows.Err(); err != nil {
+			log.Println(err)
+			return c.Redirect("/auth")
+		}
+		if !found {
+			hashedPassword, err := hashPassword(password)
+			if err != nil {
+				log.Println(err.Error())
+			}
+			_, sqlError := db.Exec("INSERT INTO users (email,password) values (?,?)", email, hashedPassword)
+			if sqlError != nil {
+				store.Set("authError", "Unknown server error")
+				return c.Redirect("/auth")
+			}
+			store.Set("username", email)
+			return c.Redirect("/")
+
+		}
+		store.Set("authError", "User with this email already exists!")
+		return c.Redirect("/auth")
+
+	}
+	if c.FormValue("authAction") == "login" {
+		rows, err := db.Query("SELECT password from users WHERE email = ?", email)
+		if err != nil {
+			log.Println(err.Error())
+			store.Set("authError", "Unknown server error")
+			return c.Redirect("/auth")
+		}
+		found := false
+		for rows.Next() {
+			var hash string
+			err = rows.Scan(&hash)
+			if err != nil {
+				log.Println(err.Error())
+				store.Set("authError", "Unknown server error")
+				return c.Redirect("/auth")
+			}
+			found = compareHashAndPassword(password, hash)
+		}
+		if !found {
+			store.Set("authError", "Invalid email or password!")
+			return c.Redirect("/auth")
+		}
+		if found {
+			store.Set("username", email)
+			return c.Redirect("/")
+		}
+	}
 	return c.Redirect("/auth")
 }
 
 func logout(c *fiber.Ctx) error {
 	store := sessions.Get(c)
 	defer store.Save()
+	store.Delete("username")
 	store.Destroy()
+	store.Regenerate()
 	return c.Redirect("/")
 }
 
 func main() {
 	// Initialize database
-	databaseUser, databasePassword, databaseName := "hung", "RavelTan@123", "blog"
+	databaseUser, databasePassword, databaseName := "hung", "RavelTan@123", "movie"
 	var err error
 	db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@/"+databaseName)
 	if err != nil {

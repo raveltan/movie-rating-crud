@@ -8,5 +8,6 @@ require (
 	github.com/gofiber/fiber/v2 v2.0.1
 	github.com/gofiber/session/v2 v2.0.0
 	github.com/gofiber/template v1.6.1
+	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	golang.org/x/sys v0.0.0-20200918174421-af09f7315aff // indirect
 )
