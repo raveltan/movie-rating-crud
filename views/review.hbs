@@ -1,0 +1,86 @@
+{{> 'partials/navbar' }}
+
+<div class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Add new Review</p>
+            <button class="delete" aria-label="close" onclick="hideAddDialog()"></button>
+        </header>
+        <section class="modal-card-body">
+            <form action="/add-review" method="post">
+                <div class="field">
+                    <label for="name" class="label">Review</label>
+                    <div class="control">
+                        <input type="text" name="name" class="input" placeholder="我好喜欢，咋啦？" required />
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="name" class="label">Rating</label>
+                    <div class="control">
+                        <input type="number" name="nrating" class="input" placeholder="5" required min="0" max="5"
+                            value="5" />
+                    </div>
+                </div>
+                <input type="hidden" name="rating" value="{{rating}}">
+                <input type="hidden" name="review" value="{{totalReview}}">
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button type="submit" name="movie" value="{{id}}" class="button is-success">Add
+                            Review</button>
+                    </div>
+                    <div class="control">
+                        <button class="button is-light" onclick="hideAddDialog()">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+<section class="section">
+    <div class="container">
+        <div class="level">
+            <div class="level-left">
+                <div class="level-item">
+                    <h1 class="title">{{movieName}}({{rating}})</h1>
+                </div>
+                <div class="level-item">
+                    <p class="subtitle">{{totalReview}} Review(s)</p>
+                </div>
+            </div>
+            <div class="level-right">
+                <div class="level-item">
+                    <button class="button" onclick="showAddDialog()">Add Review</button>
+                </div>
+            </div>
+        </div>
+        <div class="columns">
+
+            <div class="column">
+                <div class="card is-6-tablet is-5-desktop is-3-widescreen">
+                    {{#each reviews}}
+                    <div class="card-content">
+                        <p class="title">
+                            “{{review}}”
+                        </p>
+                        <p class="subtitle">
+                            {{email}} ({{rating}} stars)
+                        </p>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<script>
+    let modal = document.querySelector(".modal")
+    const showAddDialog = () => {
+        modal.classList.add("is-active")
+    }
+    const hideAddDialog = () => {
+        modal.classList.remove("is-active")
+    }
+</script>

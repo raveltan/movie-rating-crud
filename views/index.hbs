@@ -11,7 +11,34 @@
             </div>
             <div class="level-right">
                 <div class="level-item">
-                    <a href="/add-movie" class="button is-success">Add Movie</a>
+                    <button onclick="showAddDialog()" class="button is-success">Add Movie</button>
+                </div>
+                <div class="modal">
+                    <div class="modal-background"></div>
+                    <div class="modal-card">
+                        <header class="modal-card-head">
+                            <p class="modal-card-title">Add new movie</p>
+                            <button class="delete" aria-label="close" onclick="hideAddDialog()"></button>
+                        </header>
+                        <section class="modal-card-body">
+                            <form action="/add-movie" method="post">
+                                <div class="field">
+                                    <label for="name" class="label">Movie Name</label>
+                                    <div class="control">
+                                        <input type="text" name="name" class="input" placeholder="记录美好生活" required />
+                                    </div>
+                                </div>
+                                <div class="field is-grouped">
+                                    <div class="control">
+                                        <button type="submit" class="button is-success">Add Movie</button>
+                                    </div>
+                                    <div class="control">
+                                        <button class="button is-light" onclick="hideAddDialog()">Cancel</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </section>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -34,8 +61,8 @@
                     </td>
                     <td>
                         <div class="buttons">
-                            <a href="add-review/xvc" class="button is-small is-success">
-                                Add Review
+                            <a href="review/{{id}}" class="button is-small is-success">
+                                Review
                             </a>
                         </div>
                     </td>
@@ -45,3 +72,12 @@
         </table>
     </div>
 </section>
+<script>
+    let modal = document.querySelector(".modal")
+    const showAddDialog = () => {
+        modal.classList.add("is-active")
+    }
+    const hideAddDialog = () => {
+        modal.classList.remove("is-active")
+    }
+</script>
