@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -290,9 +291,9 @@ func processLogout(c *fiber.Ctx) error {
 
 func main() {
 	// Initialize database
-	databaseUser, databasePassword, databaseName := "hung", "RavelTan@123", "movie"
+	databaseUser, databasePassword, databaseName := "sql12366524", "7fESNz9TQR", "sql12366524"
 	var err error
-	db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@/"+databaseName)
+	db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@tcp(sql12.freemysqlhosting.net:3306)/"+databaseName)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -315,5 +316,6 @@ func main() {
 	app.Get("/review/:id", reviewPage)
 	app.Post("/add-review", proccessAndReview)
 	app.Get("*", unknownRoute)
-	log.Fatalln(app.Listen(":8080"))
+	port := os.Getenv("PORT")
+	log.Fatalln(app.Listen(":" + port))
 }
