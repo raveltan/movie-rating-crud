@@ -51,12 +51,16 @@ func main() {
 		SigningKey: []byte("一给我里GIAO GIAO"),
 	}))
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("hello")
+	app.Get("/api/movies", GetMovie)
+	app.Get("/api/review/:id", GetReview)
+	app.Post("/api/movie/add", AddMovie)
+	app.Post("/api/review/:id/add", AddReview)
+
+	// Others routes
+	app.Get("*", func(c *fiber.Ctx) error {
+		return c.Status(fiber.StatusNotFound).SendString("Not Found")
 	})
 
-	// app.Get("/logout", processLogout)
-	// app.Post("/auth", processAuth)
 	// app.Post("/add-movie", processAddMovie)
 	// app.Get("/review/:id", reviewPage)
 	// app.Post("/add-review", proccessAndReview)
@@ -69,16 +73,6 @@ func main() {
 	log.Fatalln(app.Listen(":" + port))
 }
 
-// type movieData struct {
-// 	Id     int
-// 	Name   string
-// 	Rating string
-// 	Voter  int
-// }
-
-// func unknownRoute(c *fiber.Ctx) error {
-// 	return c.Redirect("/")
-// }
 // func homePage(c *fiber.Ctx) error {
 // 	if username == nil {
 // 		return c.Redirect("/auth")
@@ -110,29 +104,6 @@ func main() {
 // 	}, "layout/main")
 // }
 
-// func authPage(c *fiber.Ctx) error {
-// 	store := sessions.Get(c)
-// 	username := store.Get("username")
-// 	if username != nil {
-// 		if user := username.(string); user != "" {
-// 			return c.Redirect("/")
-// 		}
-// 	}
-// 	defer store.Save()
-// 	errorStatus := store.Get("authError")
-// 	var authError string
-// 	if errorStatus != nil {
-// 		r, ok := errorStatus.(string)
-// 		if ok {
-// 			authError = r
-// 		}
-// 	}
-// 	store.Delete("authError")
-// 	return c.Render("auth", fiber.Map{
-// 		"loginFailed": authError,
-// 	}, "layout/main")
-// }
-
 // func processAddMovie(c *fiber.Ctx) error {
 // 	store := sessions.Get(c)
 // 	username := store.Get("username")
@@ -144,81 +115,6 @@ func main() {
 // 		}
 // 	}
 // 	return c.Redirect("/")
-// }
-
-// func processAuth(c *fiber.Ctx) error {
-// 	store := sessions.Get(c)
-// 	defer store.Save()
-// 	email := c.FormValue("email")
-// 	password := c.FormValue("password")
-// 	if c.FormValue("authAction") == "register" {
-// 		rows, err := db.Query("SELECT email from users where email = ?", email)
-// 		if err != nil {
-// 			log.Println(err.Error())
-// 			store.Set("authError", "Unknown server error!")
-// 			return c.Redirect("/auth")
-// 		}
-// 		found := false
-// 		for rows.Next() {
-// 			var emailStored string
-// 			var err = rows.Scan(&emailStored)
-// 			if err != nil {
-// 				log.Println(err.Error())
-// 			}
-// 			if emailStored == email {
-// 				found = true
-// 			}
-// 		}
-// 		if err = rows.Err(); err != nil {
-// 			log.Println(err)
-// 			return c.Redirect("/auth")
-// 		}
-// 		if !found {
-// 			hashedPassword, err := hashPassword(password)
-// 			if err != nil {
-// 				log.Println(err.Error())
-// 			}
-// 			_, sqlError := db.Exec("INSERT INTO users (email,password) values (?,?)", email, hashedPassword)
-// 			if sqlError != nil {
-// 				store.Set("authError", "Unknown server error")
-// 				return c.Redirect("/auth")
-// 			}
-// 			store.Set("username", email)
-// 			return c.Redirect("/")
-
-// 		}
-// 		store.Set("authError", "User with this email already exists!")
-// 		return c.Redirect("/auth")
-
-// 	}
-// 	if c.FormValue("authAction") == "login" {
-// 		rows, err := db.Query("SELECT password from users WHERE email = ?", email)
-// 		if err != nil {
-// 			log.Println(err.Error())
-// 			store.Set("authError", "Unknown server error")
-// 			return c.Redirect("/auth")
-// 		}
-// 		found := false
-// 		for rows.Next() {
-// 			var hash string
-// 			err = rows.Scan(&hash)
-// 			if err != nil {
-// 				log.Println(err.Error())
-// 				store.Set("authError", "Unknown server error")
-// 				return c.Redirect("/auth")
-// 			}
-// 			found = compareHashAndPassword(password, hash)
-// 		}
-// 		if !found {
-// 			store.Set("authError", "Invalid email or password!")
-// 			return c.Redirect("/auth")
-// 		}
-// 		if found {
-// 			store.Set("username", email)
-// 			return c.Redirect("/")
-// 		}
-// 	}
-// 	return c.Redirect("/auth")
 // }
 
 // type review struct {
