@@ -40,11 +40,11 @@ func main() {
 	app.Post("/api/register", Register)
 
 	//Refresh route
-	app.Use(jwtware.New(jwtware.Config{
+	app.Use("/api/refresh", jwtware.New(jwtware.Config{
 		SigningKey: []byte("GIAO GIAO"),
 	}))
 
-	app.Get("/api/refresh", Refresh)
+	app.Post("/api/refresh", Refresh)
 
 	//Restricted route
 	app.Use(jwtware.New(jwtware.Config{

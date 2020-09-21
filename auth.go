@@ -33,7 +33,50 @@ func compareHashAndPassword(password, hash string) bool {
 
 // Refresh the current refresh token to get a new access token.
 func Refresh(c *fiber.Ctx) error {
-	return c.SendString("helo")
+	user := c.Locals("user").(*jwt.Token)
+	claim := user.Claims.(jwt.MapClaims)
+	firstName, ok := claim["firstName"].(string)
+	if !ok {
+		return c.Status(500).SendString("Server Error")
+	}
+	lastName, ok := claim["lastName"].(string)
+	if !ok {
+		return c.Status(500).SendString("Server Error")
+	}
+	email, ok := claim["email"].(string)
+	if !ok {
+		return c.Status(500).SendString("Server Error")
+	}
+	// Create refreshToken and token
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["firstName"] = firstName
+	claims["lastName"] = lastName
+	claims["email"] = email
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+
+	refreshToken := jwt.New(jwt.SigningMethodHS256)
+	refreshClaim := refreshToken.Claims.(jwt.MapClaims)
+	refreshClaim["firstName"] = firstName
+	refreshClaim["lastName"] = lastName
+	refreshClaim["email"] = email
+	refreshClaim["exp"] = time.Now().Add(time.Hour * 730 * 12).Unix()
+
+	t, err := token.SignedString([]byte("一给我里GIAO GIAO"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	r, err := refreshToken.SignedString([]byte("GIAO GIAO"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.JSON(map[string]string{
+		"refresh": r,
+		"token":   t,
+	})
+
 }
 
 // Login to the application with email and password
