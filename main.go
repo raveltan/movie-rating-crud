@@ -38,6 +38,8 @@ func main() {
 	//Unrestricted route
 	app.Post("/api/login", Login)
 	app.Post("/api/register", Register)
+	app.Static("/", "./public")
+	// Others routes
 
 	//Refresh route
 	app.Use("/api/refresh", jwtware.New(jwtware.Config{
@@ -52,175 +54,17 @@ func main() {
 	}))
 
 	app.Get("/api/movies", GetMovie)
+	app.Get("/api/movie/:id", getMovieData)
 	app.Get("/api/review/:id", GetReview)
 	app.Post("/api/movie/add", AddMovie)
 	app.Post("/api/review/:id/add", AddReview)
 
-	// Others routes
 	app.Get("*", func(c *fiber.Ctx) error {
-		return c.Status(fiber.StatusNotFound).SendString("Not Found")
+		return c.Redirect("/")
 	})
-
-	// app.Post("/add-movie", processAddMovie)
-	// app.Get("/review/:id", reviewPage)
-	// app.Post("/add-review", proccessAndReview)
-	// app.Get("*", unknownRoute)
-
 	//port := os.Getenv("PORT")
 
 	//local
 	port := "3000"
 	log.Fatalln(app.Listen(":" + port))
 }
-
-// func homePage(c *fiber.Ctx) error {
-// 	if username == nil {
-// 		return c.Redirect("/auth")
-// 	}
-// 	if user, err := username.(string); !err {
-// 		if user == "" {
-// 			return c.Redirect("/auth")
-// 		}
-// 	}
-// 	var data []movieData
-// 	queryResult, err := db.Query("SELECT id,name,rating,voter FROM movie")
-// 	if err != nil {
-// 		log.Panicln(err.Error())
-// 	}
-// 	for queryResult.Next() {
-// 		var temp movieData
-// 		var tempRate float64
-// 		err = queryResult.Scan(&temp.Id, &temp.Name, &tempRate, &temp.Voter)
-// 		if err != nil {
-// 			log.Println(err.Error())
-// 		}
-// 		temp.Rating = fmt.Sprintf("%.2f", tempRate)
-// 		data = append(data, temp)
-// 	}
-// 	return c.Render("index", fiber.Map{
-// 		"username":  username,
-// 		"film":      data,
-// 		"totalFilm": len(data),
-// 	}, "layout/main")
-// }
-
-// func processAddMovie(c *fiber.Ctx) error {
-// 	store := sessions.Get(c)
-// 	username := store.Get("username")
-// 	movie := c.FormValue("name")
-// 	if movie != "" && username != nil {
-// 		_, err := db.Exec("INSERT INTO movie (name) values (?)", movie)
-// 		if err != nil {
-// 			log.Println(err.Error())
-// 		}
-// 	}
-// 	return c.Redirect("/")
-// }
-
-// type review struct {
-// 	Email  string
-// 	Review string
-// 	Rating int
-// }
-
-// func reviewPage(c *fiber.Ctx) error {
-// 	store := sessions.Get(c)
-// 	username := store.Get("username")
-// 	movieID := c.Params("id")
-// 	if username == nil {
-// 		return c.Redirect("/")
-// 	}
-// 	//Get movie data
-// 	var rating string
-// 	var movieName string
-// 	var totalReview int
-// 	sqlResult, err := db.Query("SELECT name,rating,voter from movie WHERE id=?", movieID)
-// 	if err != nil {
-// 		return c.Redirect("/")
-// 	}
-// 	if t, err := sqlResult.ColumnTypes(); len(t) == 0 || err != nil {
-// 		return c.Redirect("/")
-// 	}
-// 	for sqlResult.Next() {
-// 		var tempRate float64
-// 		err = sqlResult.Scan(&movieName, &tempRate, &totalReview)
-// 		rating = fmt.Sprintf("%.2f", tempRate)
-// 		if err != nil {
-// 			return c.Redirect("/")
-// 		}
-// 	}
-// 	//Get reviews
-// 	var reviews []review
-// 	sqlResult, err = db.Query("SELECT email,review,rating FROM review WHERE movie=?", movieID)
-// 	if err != nil {
-// 		return c.Redirect("/")
-// 	}
-// 	for sqlResult.Next() {
-// 		var temp review
-// 		err = sqlResult.Scan(&temp.Email, &temp.Review, &temp.Rating)
-// 		if err != nil {
-// 			return c.Redirect("/")
-// 		}
-// 		reviews = append(reviews, temp)
-// 	}
-// 	return c.Render("review", fiber.Map{
-// 		"totalReview": totalReview,
-// 		"username":    username,
-// 		"rating":      rating,
-// 		"id":          movieID,
-// 		"movieName":   movieName,
-// 		"reviews":     reviews,
-// 	}, "layout/main")
-// }
-
-// func proccessAndReview(c *fiber.Ctx) error {
-// 	store := sessions.Get(c)
-// 	username := store.Get("username")
-// 	if username == nil {
-// 		c.Redirect("/")
-// 	}
-// 	var prevRating float64
-// 	var prevReview int
-// 	var newRating int
-// 	var err error
-// 	reviewText := c.FormValue("name")
-// 	id := c.FormValue("movie")
-// 	if reviewText == "" {
-// 		return c.Redirect("/review/" + id)
-// 	}
-// 	prevRating, err = strconv.ParseFloat(c.FormValue("rating"), 32)
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 	}
-// 	prevReview, err = strconv.Atoi(c.FormValue("review"))
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 	}
-// 	newRating, err = strconv.Atoi(c.FormValue("nrating"))
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 	}
-// 	totalStar := prevRating*float64(prevReview) + float64(newRating)
-// 	finalReviewer := prevReview + 1
-// 	finalRate := totalStar / float64(finalReviewer)
-// 	_, err = db.Exec("UPDATE movie SET rating=?,voter=? WHERE id=?", finalRate, finalReviewer, id)
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 		c.Redirect("/review/" + id)
-// 	}
-// 	_, err = db.Exec("INSERT INTO review (email,review,rating,movie) values (?,?,?,?)", username, reviewText, newRating, id)
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 		c.Redirect("/review/" + id)
-// 	}
-// 	return c.Redirect("/review/" + id)
-// }
-
-// func processLogout(c *fiber.Ctx) error {
-// 	store := sessions.Get(c)
-// 	defer store.Save()
-// 	store.Delete("username")
-// 	store.Destroy()
-// 	store.Regenerate()
-// 	return c.Redirect("/")
-// }

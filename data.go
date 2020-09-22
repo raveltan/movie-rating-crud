@@ -121,9 +121,9 @@ func AddReview(c *fiber.Ctx) error {
 			"error": "Rating should be around 0 and 5",
 		})
 	}
-	if x := len(data.Review); x < 5 || x > 199 {
+	if x := len(data.Review); x < 1 || x > 199 {
 		return c.Status(400).JSON(fiber.Map{
-			"error": "Review should be at least 5 character and maximum 199",
+			"error": "Review should be at least 1 character and maximum 199",
 		})
 	}
 	sql, err := Db.Query("SELECT rating,voter FROM movie WHERE id=?", movieID)
@@ -145,7 +145,7 @@ func AddReview(c *fiber.Ctx) error {
 		log.Println(err.Error())
 		return c.SendStatus(500)
 	}
-	_, err = Db.Exec("INSERT INTO review (name,review,rating,movie) values (?,?,?,?)", firstName+lastName, data.Review, data.Rating, movieID)
+	_, err = Db.Exec("INSERT INTO review (name,review,rating,movie) values (?,?,?,?)", firstName+" "+lastName, data.Review, data.Rating, movieID)
 	if err != nil {
 		log.Println(err.Error())
 		return c.SendStatus(500)
@@ -153,4 +153,28 @@ func AddReview(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": data,
 	})
+}
+
+type movieData struct {
+	Name   string
+	Rating float64
+}
+
+func getMovieData(c *fiber.Ctx) error {
+	movieID := c.Params("id")
+	sql, err := Db.Query("SELECT name,rating FROM movie WHERE id=?", movieID)
+	if err != nil {
+		return c.SendStatus(500)
+	}
+	var temp movieData
+	for sql.Next() {
+		err = sql.Scan(&temp.Name, &temp.Rating)
+		if err != nil {
+			return c.SendStatus(500)
+		}
+	}
+	if sql.Err() != nil {
+		return c.SendStatus(500)
+	}
+	return c.JSON(temp)
 }
