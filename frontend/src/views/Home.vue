@@ -154,9 +154,6 @@ export default {
     },
     created() {
         this.initData()
-        setInterval(() => {
-            this.initData()
-        }, 15000)
     },
     methods: {
         async addMovie() {
@@ -187,12 +184,10 @@ export default {
                     this.$store.state.baseUrl + '/api/movies'
                 )
                 if (result) {
-                    console.log(result)
                     this.movie = result.data
                 }
             } catch (e) {
                 if (e) {
-                    console.log(e)
                     this.error = 'Problem communication with the server'
                 }
             } finally {
