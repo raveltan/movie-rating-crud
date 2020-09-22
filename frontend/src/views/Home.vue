@@ -166,7 +166,6 @@ export default {
                 })
                 this.initData()
             } catch (e) {
-                console.log(e)
                 if (e) {
                     this.error = 'Problem communication with the server'
                 }

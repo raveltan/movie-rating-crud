@@ -114,7 +114,7 @@ func AddReview(c *fiber.Ctx) error {
 	data := new(review)
 	if err := c.BodyParser(data); err != nil {
 		log.Println(err.Error())
-		return c.SendStatus(400)
+		return c.Status(400).JSON(err.Error())
 	}
 	if data.Rating < 0 || data.Rating > 5 {
 		return c.Status(400).JSON(fiber.Map{

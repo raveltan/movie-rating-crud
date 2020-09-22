@@ -149,16 +149,19 @@ export default {
             }
             this.$store.state.loading = true
             try {
+                let temp = {
+                    review: this.newReview,
+                    rating: parseInt(this.newRating)
+                }
+
                 await axios.post(
                     this.$store.state.baseUrl +
                         '/api/review/' +
                         this.$route.params.id +
                         '/add',
-                    {
-                        rating: this.newRating,
-                        review: this.newReview
-                    }
+                    temp
                 )
+
                 this.error = ''
                 this.newReview = ''
                 this.newRating = 5
