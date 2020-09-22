@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
@@ -62,9 +63,9 @@ func main() {
 	app.Get("*", func(c *fiber.Ctx) error {
 		return c.Redirect("/")
 	})
-	//port := os.Getenv("PORT")
+	port := os.Getenv("PORT")
 
-	//local
-	port := "3000"
+	// local
+	// port := "3000"
 	log.Fatalln(app.Listen(":" + port))
 }
