@@ -15,7 +15,7 @@ const store = new Vuex.Store({
     state: {
         token: null,
         refresh: null,
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'https://thawing-chamber-91284.herokuapp.com/',
         loading: true
     },
     mutations: {

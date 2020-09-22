@@ -14,15 +14,15 @@ import (
 var Db *sql.DB
 
 func main() {
-	// Initialize database
-	// databaseUser, databasePassword, databaseName := "sql12366524", "7fESNz9TQR", "sql12366524"
-	// var err error
-	// db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@tcp(sql12.freemysqlhosting.net:3306)/"+databaseName)
+	//Initialize database
+	databaseUser, databasePassword, databaseName := "sql12366524", "7fESNz9TQR", "sql12366524"
+	var err error
+	Db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@tcp(sql12.freemysqlhosting.net:3306)/"+databaseName)
 
 	//Local server
-	databaseUser, databasePassword, databaseName := "hung", "RavelTan@123", "movie"
-	var err error
-	Db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@/"+databaseName)
+	// databaseUser, databasePassword, databaseName := "hung", "RavelTan@123", "movie"
+	// var err error
+	// Db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@/"+databaseName)
 
 	if err != nil {
 		panic(err.Error())
@@ -38,7 +38,7 @@ func main() {
 	//Unrestricted route
 	app.Post("/api/login", Login)
 	app.Post("/api/register", Register)
-	app.Static("/", "./public")
+	app.Static("/", "./frontend/dist")
 	// Others routes
 
 	//Refresh route
