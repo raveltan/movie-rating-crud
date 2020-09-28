@@ -6,10 +6,9 @@ A movie rater CRUD Application written in GO
 
 ## Setup
 
-Before running the webserver, make sure that you have the created user john or you can follow the following steps:
-As an admin, run:
+Before running the webserver,
 
-Then run the migration sql from data.sql or run the following:
+Then run the migration as following:
 
 ```sql
 
