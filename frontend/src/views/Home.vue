@@ -187,9 +187,16 @@ export default {
                     this.$store.state.baseUrl + '/api/movies'
                 )
                 if (result) {
-                    this.movie = result.data
+                    if (result.data) {
+                        if (result.data.length > 0) {
+                            this.movie = result.data
+                        } else {
+                            this.movie = []
+                        }
+                    }
                 }
             } catch (e) {
+                console.log({ e })
                 if (e) {
                     this.error = 'Problem communication with the server'
                 }

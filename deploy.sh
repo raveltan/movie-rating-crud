@@ -1,5 +1,7 @@
 echo "Creating deployment executable for Mac,Linux and windows ...\n"
 
+rm -rf ./dist || true
+
 echo "Building for linux ..."
 
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ./dist/server.linux .
@@ -23,5 +25,5 @@ cd ..
 cp -r ./frontend/dist ./dist/public 
 cp ./README.md ./dist/README.md
 tar -cvzf dist.tar.gz dist
-rm -r ./dist
+
 echo "Done :)"
