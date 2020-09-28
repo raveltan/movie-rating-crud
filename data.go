@@ -46,17 +46,20 @@ type movieReview struct {
 // GetReview get reviews for specific movie
 func GetReview(c *fiber.Ctx) error {
 	// FIXME: SWITCH TO JOIN SYNTAX AND DECOUPLE DATA BEFORE RETURNING REQUEST
-	// SELECT movie.name,movie.rating,review.name,review.review,review.rating FROM review INNER JOIN movie ON review.movie = movie.id;
+	// with data as (SELECT movie.name as movie,movie.rating,review.name as review_name,review.review,review.rating as movie_rating,movie.id as movie_id FROM review INNER JOIN movie ON review.movie = movie.id) SELECT * FROM data WHERE movie_id=7;
 	movieID := c.Params("id")
-	queryResult, err := Db.Query("SELECT name,review,rating FROM review where movie=?", movieID)
+	queryResult, err := Db.Query("with data as (SELECT movie.name as movie,movie.rating,review.name as review_name,review.review,review.rating as movie_rating,movie.id as movie_id FROM review INNER JOIN movie ON review.movie = movie.id) SELECT * FROM data WHERE movie_id=?", movieID)
 	if err != nil {
 		log.Println(err)
 		return c.Status(500).SendString("Server error")
 	}
 	var reviewList []movieReview
+	var movieName string
+	var movieRating float32
+	var movieIDNumber int
 	for queryResult.Next() {
 		var temp movieReview
-		err = queryResult.Scan(&temp.Name, &temp.Review, &temp.Rating)
+		err = queryResult.Scan(&movieName, &movieRating, &temp.Name, &temp.Review, &temp.Rating, &movieIDNumber)
 		if err != nil {
 			log.Println(err)
 			return c.Status(500).SendString("Server error")
@@ -67,7 +70,15 @@ func GetReview(c *fiber.Ctx) error {
 		log.Println(err)
 		return c.Status(500).SendString("Server error")
 	}
-	return c.JSON(reviewList)
+	if movieName == "" {
+		return c.SendStatus(404)
+	}
+	return c.JSON(fiber.Map{
+		"id":     movieIDNumber,
+		"name":   movieName,
+		"rating": movieRating,
+		"review": reviewList,
+	})
 }
 
 type newMovie struct {
@@ -160,23 +171,4 @@ func AddReview(c *fiber.Ctx) error {
 type movieData struct {
 	Name   string
 	Rating float64
-}
-
-func getMovieData(c *fiber.Ctx) error {
-	movieID := c.Params("id")
-	sql, err := Db.Query("SELECT name,rating FROM movie WHERE id=?", movieID)
-	if err != nil {
-		return c.SendStatus(500)
-	}
-	var temp movieData
-	for sql.Next() {
-		err = sql.Scan(&temp.Name, &temp.Rating)
-		if err != nil {
-			return c.SendStatus(500)
-		}
-	}
-	if sql.Err() != nil {
-		return c.SendStatus(500)
-	}
-	return c.JSON(temp)
 }

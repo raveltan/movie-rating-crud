@@ -10,14 +10,17 @@
                     </div>
                 </div>
                 <div class="right">
-                    <div class="item">
+                    <div class="item is-grouped is-grouped-centered">
                         <b-button
-                            rounded
+                            class="mr-2"
                             outlined
-                            class="mb-3"
                             @click="addDialog = true"
+                            type="is-primary is-light"
                         >
                             Add Movie
+                        </b-button>
+                        <b-button outlined @click="initData()">
+                            Refresh
                         </b-button>
                     </div>
                 </div>
@@ -149,7 +152,8 @@ export default {
             movie: [],
             error: '',
             addDialog: false,
-            newMovie: ''
+            newMovie: '',
+            unsubs: null
         }
     },
     created() {

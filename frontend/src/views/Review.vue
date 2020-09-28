@@ -76,12 +76,17 @@
                     >{{ error }}
                 </b-notification>
                 <div class="level">
-                    <div class="level-left">
+                    <div class="level-left" v-if="!notFound">
                         <div class="level-item">
-                            <h1 class="title">{{ data.Name }}</h1>
+                            <h1 class="title">{{ reviews.name }}</h1>
                         </div>
                         <div class="level-item">
-                            <p class="subtitle">{{ data.Rating }} stars</p>
+                            <p class="subtitle">{{ reviews.rating }} stars</p>
+                        </div>
+                    </div>
+                    <div class="level-left" v-if="notFound">
+                        <div class="level-item">
+                            <p class="title is-4">Be the first to add review</p>
                         </div>
                     </div>
                     <div class="level-right">
@@ -92,14 +97,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="columns">
+                <div class="columns" v-if="!notFound">
                     <div class="column">
                         <div
                             class="card is-6-tablet is-5-desktop is-3-widescreen"
                         >
                             <div
                                 class="card-content"
-                                v-for="review in reviews"
+                                v-for="review in reviews.review"
                                 :key="
                                     review.Name + review.Review + review.Rating
                                 "
@@ -123,11 +128,11 @@ import axios from 'axios'
 export default {
     data() {
         return {
-            data: {},
             newReview: '',
             newRating: 5,
             error: '',
-            reviews: []
+            reviews: {},
+            notFound: false
         }
     },
     created() {
@@ -186,19 +191,13 @@ export default {
                 if (result) {
                     this.reviews = result.data
                 }
-                let result2 = await axios.get(
-                    this.$store.state.baseUrl +
-                        '/api/movie/' +
-                        this.$route.params.id
-                )
-                if (result2) {
-                    this.data = result2.data
-                }
                 this.error = ''
+                this.notFound = false
             } catch (e) {
-                if (e) {
-                    this.error = 'Problem communication with the server'
-                }
+                if (e.response.status == '404') {
+                    this.notFound = true
+                    return
+                } else this.error = 'Problem communication with the server'
             } finally {
                 this.$store.state.loading = false
             }

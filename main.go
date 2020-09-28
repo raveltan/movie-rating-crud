@@ -2,8 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
@@ -15,31 +15,35 @@ import (
 var Db *sql.DB
 
 func main() {
-	//Initialize database
-	databaseUser, databasePassword, databaseName := "sql12366524", "7fESNz9TQR", "sql12366524"
-	var err error
-	Db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@tcp(sql12.freemysqlhosting.net:3306)/"+databaseName)
 
-	//Local server
-	// databaseUser, databasePassword, databaseName := "hung", "RavelTan@123", "movie"
-	// var err error
-	// Db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@/"+databaseName)
+	fmt.Println("\nWarning: The frontend portion of the app is not yet optimized for production, use at your own discretion!")
+	fmt.Println("---------------------")
+	fmt.Println("Movie CRUD Webserver")
+	fmt.Println("---------------------")
+
+	// Local server
+	databaseUser, databasePassword, databaseName := "john", "John@1234", "movie"
+	var err error
+	Db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@/"+databaseName)
 
 	if err != nil {
 		panic(err.Error())
 	}
 	err = Db.Ping()
 	if err != nil {
+		log.Println("Please make sure sql server is running and mysql setup is correct, refer to README.md for instruction")
 		panic(err.Error())
 	}
 	// Start fiber web server
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		DisableStartupMessage: true,
+	})
 	app.Use(cors.New())
 
 	//Unrestricted route
 	app.Post("/api/login", Login)
 	app.Post("/api/register", Register)
-	app.Static("/", "./frontend/dist")
+	app.Static("/", "./public")
 	// Others routes
 
 	//Refresh route
@@ -55,7 +59,6 @@ func main() {
 	}))
 
 	app.Get("/api/movies", GetMovie)
-	app.Get("/api/movie/:id", getMovieData)
 	app.Get("/api/review/:id", GetReview)
 	app.Post("/api/movie/add", AddMovie)
 	app.Post("/api/review/:id/add", AddReview)
@@ -63,9 +66,12 @@ func main() {
 	app.Get("*", func(c *fiber.Ctx) error {
 		return c.Redirect("/")
 	})
-	port := os.Getenv("PORT")
+
+	var port string
 
 	// local
-	// port := "3000"
+	port = "3000"
+
+	fmt.Println("Connect to server at http://localhost:" + port)
 	log.Fatalln(app.Listen(":" + port))
 }
