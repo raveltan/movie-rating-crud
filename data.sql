@@ -15,9 +15,10 @@ CREATE TABLE `review` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(60) NOT NULL,
   `review` varchar(200) NOT NULL,
-  `RATING` int NOT NULL,
-  `MOVIE` int NOT NULL,
-  PRIMARY KEY (`id`)
+  `rating` int NOT NULL,
+  `movie` int NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`movie`) REFERENCES movie(`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4;
 
 DROP TABLE IF EXISTS `users`;
