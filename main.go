@@ -70,7 +70,7 @@ func main() {
 	var port string
 
 	// local
-	port = "3000"
+	port = "80"
 
 	fmt.Println("Connect to server at http://localhost:" + port)
 	log.Fatalln(app.Listen(":" + port))
