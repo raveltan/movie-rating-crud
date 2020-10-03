@@ -45,8 +45,6 @@ type movieReview struct {
 
 // GetReview get reviews for specific movie
 func GetReview(c *fiber.Ctx) error {
-	// FIXME: SWITCH TO JOIN SYNTAX AND DECOUPLE DATA BEFORE RETURNING REQUEST
-	// with data as (SELECT movie.name as movie,movie.rating,review.name as review_name,review.review,review.rating as movie_rating,movie.id as movie_id FROM review INNER JOIN movie ON review.movie = movie.id) SELECT * FROM data WHERE movie_id=7;
 	movieID := c.Params("id")
 	queryResult, err := Db.Query("SELECT movie.name as movie,movie.rating,review.name as review_name,review.review,review.rating as movie_rating,movie.id as movie_id FROM review INNER JOIN movie ON review.movie = movie.id AND movie.id = ?", movieID)
 	if err != nil {
