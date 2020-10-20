@@ -4,11 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	jwtware "github.com/gofiber/jwt/v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Db is the instance of Mysql database
@@ -16,7 +18,7 @@ var Db *sql.DB
 
 type config struct {
 	Server struct {
-		Port int `yaml:"port"`
+		Port string `yaml:"port"`
 	} `yaml:"server"`
 	Database struct {
 		User string `yaml:"user"`
@@ -30,9 +32,24 @@ func main() {
 	fmt.Println("Movie CRUD Webserver")
 	fmt.Println("---------------------")
 
-	// Local server
-	databaseUser, databasePassword, databaseName := "john", "John@1234", "movie"
 	var err error
+
+	// Get database and server settings from the config file
+	f, err := os.Open("config.yaml")
+	if err != nil {
+		log.Println(err)
+	}
+	defer f.Close()
+	var cfg config
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(&cfg)
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Local server
+	databaseUser, databasePassword, databaseName := cfg.Database.User, cfg.Database.Pass, cfg.Database.Name
+
 	Db, err = sql.Open("mysql", databaseUser+":"+databasePassword+"@/"+databaseName)
 
 	if err != nil {
@@ -40,7 +57,7 @@ func main() {
 	}
 	err = Db.Ping()
 	if err != nil {
-		log.Println("Please make sure sql server is running and mysql setup is correct, refer to README.md for instruction")
+		log.Println("Unable to make connection to mysql server, please check your config.yaml or refer to README.md for instruction")
 		panic(err.Error())
 	}
 	// Start fiber web server
@@ -76,11 +93,6 @@ func main() {
 		return c.Redirect("/")
 	})
 
-	var port string
-
-	// local
-	port = "80"
-
-	fmt.Println("Connect to server at http://localhost:" + port)
-	log.Fatalln(app.Listen(":" + port))
+	fmt.Println("Connect to server at http://localhost" + cfg.Server.Port)
+	log.Fatalln(app.Listen(cfg.Server.Port))
 }

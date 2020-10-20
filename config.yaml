@@ -1,5 +1,5 @@
 server:
-  port: 50050
+  port: ":47000"
 
 database:
   user: john
