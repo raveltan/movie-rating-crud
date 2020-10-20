@@ -67,31 +67,31 @@ func main() {
 	app.Use(cors.New())
 
 	//Unrestricted route
-	app.Post("/api/login", Login)
-	app.Post("/api/register", Register)
-	app.Static("/", "./public")
-	// Others routes
+	app.Post("/api/login", login)
+	app.Post("/api/register", register)
 
 	//Refresh route
 	app.Use("/api/refresh", jwtware.New(jwtware.Config{
 		SigningKey: []byte("GIAO GIAO"),
 	}))
 
-	app.Post("/api/refresh", Refresh)
+	app.Post("/api/refresh", refresh)
 
 	//Restricted route
 	app.Use(jwtware.New(jwtware.Config{
 		SigningKey: []byte("一给我里GIAO GIAO"),
 	}))
 
-	app.Get("/api/movies", GetMovie)
-	app.Get("/api/review/:id", GetReview)
+	// Movie Route
+	app.Get("/api/movies", getMovieList)
+	app.Get("/api/movie/:id", getMovie)
+	app.Get("/api/user/:id/movie/", getMovieAddedBy)
 	app.Post("/api/movie/add", AddMovie)
-	app.Post("/api/review/:id/add", AddReview)
 
-	app.Get("*", func(c *fiber.Ctx) error {
-		return c.Redirect("/")
-	})
+	// Review Route
+	app.Get("/api/review/:id", GetMovieReview)
+	//app.Get("/api/user/:user/review/", GetReviewAddedBy)
+	app.Post("/api/review/:id/add", AddReview)
 
 	fmt.Println("Connect to server at http://localhost" + cfg.Server.Port)
 	log.Fatalln(app.Listen(cfg.Server.Port))

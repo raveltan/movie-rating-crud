@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -22,7 +23,7 @@ type registrationData struct {
 }
 
 func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 7)
 	return string(bytes), err
 }
 
@@ -32,7 +33,7 @@ func compareHashAndPassword(password, hash string) bool {
 }
 
 // Refresh the current refresh token to get a new access token.
-func Refresh(c *fiber.Ctx) error {
+func refresh(c *fiber.Ctx) error {
 	user := c.Locals("user").(*jwt.Token)
 	claim := user.Claims.(jwt.MapClaims)
 	firstName, ok := claim["firstName"].(string)
@@ -80,7 +81,7 @@ func Refresh(c *fiber.Ctx) error {
 }
 
 // Login to the application with email and password
-func Login(c *fiber.Ctx) error {
+func login(c *fiber.Ctx) error {
 	loginCreds := new(loginData)
 	if err := c.BodyParser(loginCreds); err != nil {
 		log.Println("LOGIN:", err.Error())
@@ -93,7 +94,7 @@ func Login(c *fiber.Ctx) error {
 			"error": "Email should not be empty and password should be at least 8 characters",
 		})
 	}
-	rows, err := Db.Query("SELECT email,password,firstName,lastName from users where email = ?", loginCreds.Email)
+	rows, err := Db.Query("SELECT user_id,password,first_name,last_name from user where user_id = ?", loginCreds.Email)
 	if err != nil {
 		log.Println(err.Error())
 		return c.Status(500).JSON(map[string]string{
@@ -159,7 +160,7 @@ func Login(c *fiber.Ctx) error {
 }
 
 // Register to application with email and password
-func Register(c *fiber.Ctx) error {
+func register(c *fiber.Ctx) error {
 	registerCreds := new(registrationData)
 	if err := c.BodyParser(registerCreds); err != nil {
 		log.Println("LOGIN:", err.Error())
@@ -185,77 +186,54 @@ func Register(c *fiber.Ctx) error {
 			"error": "Firstname and Lastname should be more than 3 characters",
 		})
 	}
-	rows, err := Db.Query("SELECT email from users where email = ?", registerCreds.Email)
+
+	hashedPassword, err := hashPassword(registerCreds.Password)
 	if err != nil {
 		log.Println(err.Error())
 		return c.Status(500).JSON(map[string]string{
 			"error": "Internal server error",
 		})
 	}
-	found := false
-	for rows.Next() {
-		var emailStored string
-		var err = rows.Scan(&emailStored)
-		if err != nil {
-			log.Println(err.Error())
+	_, sqlError := Db.Exec("INSERT INTO user (user_id,password,first_name,last_name) values (?,?,?,?)", registerCreds.Email, hashedPassword, registerCreds.FirstName, registerCreds.LastName)
+	if sqlError != nil {
+		if strings.Contains(sqlError.Error(), "Error 1062") {
+			return c.Status(409).JSON(map[string]string{
+				"error": "User exists",
+			})
 		}
-		if emailStored == registerCreds.Email {
-			found = true
-			break
-		}
-	}
-	if err = rows.Err(); err != nil {
-		log.Println(err.Error())
+		log.Println(sqlError.Error())
 		return c.Status(500).JSON(map[string]string{
 			"error": "Internal server error",
 		})
 	}
-	if !found {
-		hashedPassword, err := hashPassword(registerCreds.Password)
-		if err != nil {
-			log.Println(err.Error())
-			return c.Status(500).JSON(map[string]string{
-				"error": "Internal server error",
-			})
-		}
-		_, sqlError := Db.Exec("INSERT INTO users (email,password,firstName,lastName) values (?,?,?,?)", registerCreds.Email, hashedPassword, registerCreds.FirstName, registerCreds.LastName)
-		if sqlError != nil {
-			log.Println(sqlError.Error())
-			return c.Status(500).JSON(map[string]string{
-				"error": "Internal server error",
-			})
-		}
-		// Create refreshToken and token
-		token := jwt.New(jwt.SigningMethodHS256)
-		claims := token.Claims.(jwt.MapClaims)
-		claims["firstName"] = registerCreds.FirstName
-		claims["lastName"] = registerCreds.LastName
-		claims["email"] = registerCreds.Email
-		claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	// Create refreshToken and token
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["firstName"] = registerCreds.FirstName
+	claims["lastName"] = registerCreds.LastName
+	claims["email"] = registerCreds.Email
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-		refreshToken := jwt.New(jwt.SigningMethodHS256)
-		refreshClaim := refreshToken.Claims.(jwt.MapClaims)
-		refreshClaim["firstName"] = registerCreds.FirstName
-		refreshClaim["lastName"] = registerCreds.LastName
-		refreshClaim["email"] = registerCreds.Email
-		refreshClaim["exp"] = time.Now().Add(time.Hour * 730 * 12).Unix()
+	refreshToken := jwt.New(jwt.SigningMethodHS256)
+	refreshClaim := refreshToken.Claims.(jwt.MapClaims)
+	refreshClaim["firstName"] = registerCreds.FirstName
+	refreshClaim["lastName"] = registerCreds.LastName
+	refreshClaim["email"] = registerCreds.Email
+	refreshClaim["exp"] = time.Now().Add(time.Hour * 730 * 12).Unix()
 
-		t, err := token.SignedString([]byte("一给我里GIAO GIAO"))
-		if err != nil {
-			return c.SendStatus(fiber.StatusInternalServerError)
-		}
-
-		r, err := refreshToken.SignedString([]byte("GIAO GIAO"))
-		if err != nil {
-			return c.SendStatus(fiber.StatusInternalServerError)
-		}
-
-		return c.JSON(map[string]string{
-			"refresh": r,
-			"token":   t,
-		})
+	t, err := token.SignedString([]byte("一给我里GIAO GIAO"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	return c.Status(409).JSON(map[string]string{
-		"error": "User exists",
+
+	r, err := refreshToken.SignedString([]byte("GIAO GIAO"))
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.JSON(map[string]string{
+		"refresh": r,
+		"token":   t,
 	})
+
 }
