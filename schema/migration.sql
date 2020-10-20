@@ -14,7 +14,7 @@ create table movies
     name     varchar(50)                   not null,
     added_on timestamp     default 'now()' not null,
     added_by varchar(40)                   not null,
-    rating   decimal(5, 1) default 0.0     not null,
+    rating   decimal(5, 2) default 0.00    not null,
     voters   int           default 0       not null,
     constraint movies_user_user_id_fk
         foreign key (added_by) references user (user_id)
@@ -37,4 +37,3 @@ create table review
         foreign key (author) references user (user_id)
             on update cascade
 );
-

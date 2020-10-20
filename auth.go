@@ -124,7 +124,7 @@ func login(c *fiber.Ctx) error {
 	}
 	if !found {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "User not found",
+			"error": "Invalid credentials",
 		})
 	}
 	// Create refreshToken and token

@@ -8,7 +8,9 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	jwtware "github.com/gofiber/jwt/v2"
 	"gopkg.in/yaml.v2"
 )
@@ -65,6 +67,11 @@ func main() {
 		DisableStartupMessage: true,
 	})
 	app.Use(cors.New())
+	app.Use(compress.New(compress.Config{
+		Level: 2,
+	}))
+
+	app.Use(logger.New())
 
 	//Unrestricted route
 	app.Post("/api/login", login)
@@ -86,12 +93,12 @@ func main() {
 	app.Get("/api/movies", getMovieList)
 	app.Get("/api/movie/:id", getMovie)
 	app.Get("/api/user/:id/movie/", getMovieAddedBy)
-	app.Post("/api/movie/add", AddMovie)
+	app.Post("/api/movie/add", addMovie)
 
 	// Review Route
-	app.Get("/api/review/:id", GetMovieReview)
-	//app.Get("/api/user/:user/review/", GetReviewAddedBy)
-	app.Post("/api/review/:id/add", AddReview)
+	app.Get("/api/review/:id", getMovieReview)
+	app.Get("/api/user/:id/review/", getReviewAddedBy)
+	app.Post("/api/review/:id/add", addReview)
 
 	fmt.Println("Connect to server at http://localhost" + cfg.Server.Port)
 	log.Fatalln(app.Listen(cfg.Server.Port))
