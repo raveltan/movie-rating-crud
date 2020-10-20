@@ -14,9 +14,18 @@ import (
 // Db is the instance of Mysql database
 var Db *sql.DB
 
-func main() {
+type config struct {
+	Server struct {
+		Port int `yaml:"port"`
+	} `yaml:"server"`
+	Database struct {
+		User string `yaml:"user"`
+		Pass string `yaml:"pass"`
+		Name string `yaml:"name"`
+	} `yaml:"database"`
+}
 
-	fmt.Println("\nWarning: The frontend portion of the app is not yet optimized for production, use at your own discretion!")
+func main() {
 	fmt.Println("---------------------")
 	fmt.Println("Movie CRUD Webserver")
 	fmt.Println("---------------------")

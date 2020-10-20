@@ -1,0 +1,7 @@
+server:
+  port: 50050
+
+database:
+  user: john
+  pass: John@1234
+  name: movie
