@@ -1,4 +1,4 @@
-# Moorater
+# Mooreview
 
 A movie rater CRUD Application written in GO
 
